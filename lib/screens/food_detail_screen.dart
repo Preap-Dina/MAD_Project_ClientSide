@@ -43,7 +43,24 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detail')),
+      appBar: AppBar(
+        backgroundColor: Consts.primaryColor,
+        title: const Text('Detail', style: TextStyle(color: Colors.white)),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12.0),
+            child: Center(
+              child: Text(
+                'TosTver - តោះធ្វើ',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -55,7 +72,16 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     if (food?.image != null)
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(food!.image!),
+                        child: Image.network(
+                          food!.image!,
+                          errorBuilder: (c, e, s) => Container(
+                            color: Colors.grey[200],
+                            height: 180,
+                            child: const Center(
+                              child: Icon(Icons.broken_image),
+                            ),
+                          ),
+                        ),
                       ),
                     const SizedBox(height: 12),
                     Text(
@@ -72,14 +98,14 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 6),
-                    ..._buildNumberedList(food?.ingredients),
+                    _buildMultilineText(food?.ingredients),
                     const SizedBox(height: 8),
                     Text(
                       'Steps',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 6),
-                    ..._buildNumberedList(food?.steps),
+                    _buildMultilineText(food?.steps),
                     const SizedBox(height: 16),
                     if (related.isNotEmpty) ...[
                       const Text(
@@ -94,13 +120,12 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                           itemBuilder: (c, i) {
                             final r = related[i];
                             return GestureDetector(
-                              onTap: () =>
-                                  Navigator.of(context).pushReplacement(
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          FoodDetailScreen(foodId: r.id),
-                                    ),
-                                  ),
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      FoodDetailScreen(foodId: r.id),
+                                ),
+                              ),
                               child: SizedBox(
                                 width: 140,
                                 child: Column(
@@ -114,6 +139,15 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                                                 r.image!,
                                                 fit: BoxFit.cover,
                                                 width: 140,
+                                                errorBuilder: (c, e, s) =>
+                                                    Container(
+                                                      color: Colors.grey[200],
+                                                      child: const Center(
+                                                        child: Icon(
+                                                          Icons.broken_image,
+                                                        ),
+                                                      ),
+                                                    ),
                                               )
                                             : Container(
                                                 color: Colors.grey[200],
@@ -145,23 +179,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   }
 }
 
-List<Widget> _buildNumberedList(String? raw) {
-  if (raw == null || raw.trim().isEmpty) return [const Text('-')];
-  // Normalize possible literal escape sequences and actual newlines
+Widget _buildMultilineText(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return const Text('-');
   final normalized = raw.replaceAll(r'\r\n', '\n').replaceAll('\r\n', '\n');
-  final lines = normalized
-      .split(RegExp(r'\n'))
-      .map((s) => s.trim())
-      .where((s) => s.isNotEmpty)
-      .toList();
-  if (lines.isEmpty) return [const Text('-')];
-  return List<Widget>.generate(lines.length, (i) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6.0),
-      child: Text(
-        '${i + 1}. ${lines[i]}',
-        style: TextStyle(color: Consts.descriptionColor),
-      ),
-    );
-  });
+  return Text(normalized, style: TextStyle(color: Consts.descriptionColor));
 }

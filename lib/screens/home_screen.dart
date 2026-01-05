@@ -58,22 +58,26 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Text(
-              'TosTver - តោះធ្វើ',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const Spacer(),
-            Text(
-              'ទំព័រដើម',
-              style: TextStyle(
-                color: Consts.primaryColor,
-                fontWeight: FontWeight.bold,
+        backgroundColor: Consts.primaryColor,
+        title: const Text(
+          'ទំព័រដើម',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: false,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12.0),
+            child: Center(
+              child: Text(
+                'TosTver - តោះធ្វើ',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       body: loading
           ? const Center(child: CircularProgressIndicator())

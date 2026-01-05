@@ -29,7 +29,16 @@ class FoodCard extends StatelessWidget {
                 children: [
                   Positioned.fill(
                     child: food.image != null
-                        ? Image.network(food.image!, fit: BoxFit.cover)
+                        ? Image.network(
+                            food.image!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stack) => Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: Icon(Icons.broken_image),
+                              ),
+                            ),
+                          )
                         : Container(color: Colors.grey[200]),
                   ),
                   Positioned(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/food.dart';
 import '../services/api_service.dart';
+import '../utils/constants.dart';
 import '../widgets/food_card.dart';
 import 'food_detail_screen.dart';
 import '../widgets/bottom_nav.dart';
@@ -49,7 +50,24 @@ class _WishlistScreenState extends State<WishlistScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Wishlist')),
+      appBar: AppBar(
+        backgroundColor: Consts.primaryColor,
+        title: const Text('Wishlist', style: TextStyle(color: Colors.white)),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12.0),
+            child: Center(
+              child: Text(
+                'TosTver - តោះធ្វើ',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : Padding(

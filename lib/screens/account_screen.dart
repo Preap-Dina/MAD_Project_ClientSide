@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import '../widgets/bottom_nav.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
+import '../utils/constants.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -34,45 +35,71 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Account')),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            logged
-                ? Column(
-                    children: [
-                      Text('Logged in'),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: _logout,
-                        child: const Text('Logout'),
-                      ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const LoginScreen(),
+      appBar: AppBar(
+        backgroundColor: Consts.primaryColor,
+        title: const Text('Account', style: TextStyle(color: Colors.white)),
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12.0),
+            child: Center(
+              child: Text(
+                'TosTver - តោះធ្វើ',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 24),
+              logged
+                  ? Column(
+                      children: [
+                        const Text('Logged in'),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: _logout,
+                          child: const Text('Logout'),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const LoginScreen(),
+                              ),
+                            ),
+                            child: const Text('Login'),
                           ),
                         ),
-                        child: const Text('Login'),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton(
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterScreen(),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterScreen(),
+                              ),
+                            ),
+                            child: const Text('Register'),
                           ),
                         ),
-                        child: const Text('Register'),
-                      ),
-                    ],
-                  ),
-          ],
+                      ],
+                    ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: const AppBottomNav(index: 3),
