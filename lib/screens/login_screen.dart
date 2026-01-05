@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Logged in')));
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(true);
     } else {
       ScaffoldMessenger.of(
         context,

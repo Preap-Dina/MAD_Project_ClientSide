@@ -23,6 +23,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadFoods();
+    _loadWishlist();
+  }
+
+  Future<void> _loadWishlist() async {
+    try {
+      final list = await api.getWishlist();
+      setState(() {
+        favourites = list.map((f) => f.id).toSet();
+      });
+    } catch (e) {
+      // ignore - user may not be logged in
+    }
   }
 
   Future<void> _loadFoods() async {
@@ -40,17 +52,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _toggleFav(Food f) async {
-    // naive: attempt add, if not allowed, show login hint
     try {
-      final success = await api.addToWishlist(f.id);
-      if (success) {
-        setState(() => favourites.add(f.id));
+      if (favourites.contains(f.id)) {
+        final success = await api.removeFromWishlist(f.id);
+        if (success) {
+          setState(() => favourites.remove(f.id));
+        }
+      } else {
+        final success = await api.addToWishlist(f.id);
+        if (success) {
+          setState(() => favourites.add(f.id));
+        }
       }
     } catch (e) {
-      // show login required
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please login to add favourites')),
-      );
+      // show login required or error
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Action failed: ${e.toString()}')));
     }
   }
 

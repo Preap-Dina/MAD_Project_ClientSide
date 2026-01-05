@@ -52,8 +52,16 @@ class ApiService {
     final uri = Uri.parse('$baseUrl/register');
     final res = await http.post(
       uri,
-      headers: _headers(null),
-      body: jsonEncode({'name': name, 'email': email, 'password': password}),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+        'password': password,
+        'password_confirmation': password,
+      }),
     );
     return res.statusCode == 201 || res.statusCode == 200;
   }
@@ -132,5 +140,24 @@ class ApiService {
     final streamed = await request.send();
     final res = await http.Response.fromStream(streamed);
     return res.statusCode == 200 || res.statusCode == 204;
+  }
+
+  /// Fetch current authenticated user (requires token). Returns a map with user data or null.
+  Future<Map<String, dynamic>?> getMe() async {
+    final token = await _getToken();
+    if (token == null) return null;
+    final uri = Uri.parse('$baseUrl/me');
+    final res = await http.get(uri, headers: _headers(token));
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+      if (body is Map<String, dynamic>) {
+        // Laravel APIs often return {"user": {...}} or the user object directly
+        if (body.containsKey('user') && body['user'] is Map<String, dynamic>) {
+          return Map<String, dynamic>.from(body['user']);
+        }
+        return Map<String, dynamic>.from(body);
+      }
+    }
+    return null;
   }
 }

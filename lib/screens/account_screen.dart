@@ -15,6 +15,7 @@ class AccountScreen extends StatefulWidget {
 class _AccountScreenState extends State<AccountScreen> {
   final ApiService api = ApiService();
   bool logged = false;
+  Map<String, dynamic>? user;
 
   @override
   void initState() {
@@ -23,13 +24,29 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _check() async {
-    // naive: try to call logout-protected me endpoint is not implemented, skip
-    setState(() => logged = false);
+    try {
+      final u = await api.getMe();
+      setState(() {
+        user = u;
+        logged = u != null;
+      });
+    } catch (e) {
+      setState(() {
+        user = null;
+        logged = false;
+      });
+    }
   }
 
   Future<void> _logout() async {
     await api.logout();
-    setState(() => logged = false);
+    setState(() {
+      logged = false;
+      user = null;
+    });
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Logged out')));
   }
 
   @override
@@ -63,7 +80,33 @@ class _AccountScreenState extends State<AccountScreen> {
               logged
                   ? Column(
                       children: [
-                        const Text('Logged in'),
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Consts.primaryColor,
+                          child: user != null && user!['name'] != null
+                              ? Text(
+                                  _initials(user!['name'].toString()),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Colors.white,
+                                ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          user?['name'] ?? 'User',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(user?['email'] ?? ''),
                         const SizedBox(height: 12),
                         ElevatedButton(
                           onPressed: _logout,
@@ -76,11 +119,18 @@ class _AccountScreenState extends State<AccountScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const LoginScreen(),
-                              ),
-                            ),
+                            onPressed: () async {
+                              final res = await Navigator.of(context)
+                                  .push<bool?>(
+                                    MaterialPageRoute(
+                                      builder: (_) => const LoginScreen(),
+                                    ),
+                                  );
+                              if (res == true) {
+                                // refresh user info after successful login
+                                await _check();
+                              }
+                            },
                             child: const Text('Login'),
                           ),
                         ),
@@ -104,5 +154,12 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
       bottomNavigationBar: const AppBottomNav(index: 3),
     );
+  }
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return '';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
   }
 }

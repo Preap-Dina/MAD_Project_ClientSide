@@ -16,6 +16,7 @@ class ExploreScreen extends StatefulWidget {
 class _ExploreScreenState extends State<ExploreScreen> {
   final ApiService api = ApiService();
   List<Food> foods = [];
+  Set<int> favourites = {};
   bool loading = true;
   String query = '';
   String category = '';
@@ -26,6 +27,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   void initState() {
     super.initState();
     _load();
+    _loadWishlist();
     _ctrl.addListener(() {
       setState(() => query = _ctrl.text);
       _search();
@@ -44,6 +46,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
       // ignore
     } finally {
       setState(() => loading = false);
+    }
+  }
+
+  Future<void> _loadWishlist() async {
+    try {
+      final list = await api.getWishlist();
+      setState(() => favourites = list.map((f) => f.id).toSet());
+    } catch (e) {
+      // ignore - not logged in
     }
   }
 
@@ -173,11 +184,31 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         final f = foods[i];
                         return FoodCard(
                           food: f,
+                          isFavorite: favourites.contains(f.id),
                           onTap: () => Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => FoodDetailScreen(foodId: f.id),
                             ),
                           ),
+                          onFavoriteToggle: () async {
+                            try {
+                              if (favourites.contains(f.id)) {
+                                final ok = await api.removeFromWishlist(f.id);
+                                if (ok) setState(() => favourites.remove(f.id));
+                              } else {
+                                final ok = await api.addToWishlist(f.id);
+                                if (ok) setState(() => favourites.add(f.id));
+                              }
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Action failed: ${e.toString()}',
+                                  ),
+                                ),
+                              );
+                            }
+                          },
                         );
                       },
                     ),
