@@ -79,13 +79,49 @@ class ApiService {
     );
     if (res.statusCode == 200) {
       final body = jsonDecode(res.body);
-      final token =
-          body['access_token'] ?? body['token'] ?? body['accessToken'];
+      var token = body['access_token'] ?? body['token'] ?? body['accessToken'];
+      // also check nested 'data' payloads (e.g., { data: { token: ..., user: ... } })
+      if (token == null &&
+          body is Map<String, dynamic> &&
+          body['data'] is Map<String, dynamic>) {
+        final data = body['data'] as Map<String, dynamic>;
+        token = data['access_token'] ?? data['token'] ?? data['accessToken'];
+      }
       if (token != null) {
         await _saveToken(token.toString());
-        // Try to fetch user and update global notifier
-        final me = await getMe();
-        if (me != null) AuthNotifier.setUser(me);
+        // Prefer user data returned in the login response (some backends return it)
+        Map<String, dynamic>? userFromBody;
+        if (body is Map<String, dynamic>) {
+          if (body['user'] is Map<String, dynamic>) {
+            userFromBody = Map<String, dynamic>.from(body['user']);
+          } else if (body['data'] is Map<String, dynamic>) {
+            final data = body['data'] as Map<String, dynamic>;
+            if (data['user'] is Map<String, dynamic>) {
+              userFromBody = Map<String, dynamic>.from(data['user']);
+            } else if (data['data'] is Map<String, dynamic>) {
+              // nested structure: { data: { data: { user: ... }}}
+              final inner = data['data'] as Map<String, dynamic>;
+              if (inner['user'] is Map<String, dynamic>) {
+                userFromBody = Map<String, dynamic>.from(inner['user']);
+              }
+            } else {
+              // sometimes the user is directly in data
+              if (data['name'] != null || data['email'] != null) {
+                userFromBody = Map<String, dynamic>.from(data);
+              }
+            }
+          }
+        }
+
+        if (userFromBody != null) {
+          AuthNotifier.setUser(userFromBody);
+        } else {
+          // Fallback: call /me. Note: /me may be protected by email verification middleware
+          // so it can return null even when login succeeded. In that case we still keep the token
+          // but the app won't show profile info until the backend allows /me or returns user in login.
+          final me = await getMe();
+          if (me != null) AuthNotifier.setUser(me);
+        }
         return true;
       }
     }
