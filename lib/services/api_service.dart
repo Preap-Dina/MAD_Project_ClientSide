@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/food.dart';
+import 'auth_notifier.dart';
 
 class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8000/api';
@@ -82,6 +83,9 @@ class ApiService {
           body['access_token'] ?? body['token'] ?? body['accessToken'];
       if (token != null) {
         await _saveToken(token.toString());
+        // Try to fetch user and update global notifier
+        final me = await getMe();
+        if (me != null) AuthNotifier.setUser(me);
         return true;
       }
     }
@@ -95,6 +99,82 @@ class ApiService {
     await http.post(uri, headers: _headers(token));
     final sp = await SharedPreferences.getInstance();
     await sp.remove('auth_token');
+    // Clear global user
+    AuthNotifier.clear();
+  }
+
+  // Profile management endpoints (requires token)
+  Future<Map<String, dynamic>?> updateUsername(String name) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Not logged in');
+    final uri = Uri.parse('$baseUrl/profile/username');
+    final res = await http.put(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'name': name}),
+    );
+    if (res.statusCode == 200) {
+      final b = jsonDecode(res.body);
+      // If backend returns updated user, refresh notifier
+      final user = b['user'] ?? b;
+      if (user is Map<String, dynamic>) {
+        AuthNotifier.setUser(Map<String, dynamic>.from(user));
+        return Map<String, dynamic>.from(user);
+      }
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> updateEmail(String email) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Not logged in');
+    final uri = Uri.parse('$baseUrl/profile/email');
+    final res = await http.put(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'email': email}),
+    );
+    if (res.statusCode == 200) {
+      final b = jsonDecode(res.body);
+      final user = b['user'] ?? b;
+      if (user is Map<String, dynamic>) {
+        AuthNotifier.setUser(Map<String, dynamic>.from(user));
+        return Map<String, dynamic>.from(user);
+      }
+    }
+    return null;
+  }
+
+  Future<bool> updatePassword(
+    String currentPassword,
+    String newPassword,
+    String newPasswordConfirmation,
+  ) async {
+    final token = await _getToken();
+    if (token == null) throw Exception('Not logged in');
+    final uri = Uri.parse('$baseUrl/profile/password');
+    final res = await http.put(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'current_password': currentPassword,
+        'password': newPassword,
+        'password_confirmation': newPasswordConfirmation,
+      }),
+    );
+    return res.statusCode == 200;
   }
 
   Future<List<Food>> getWishlist() async {

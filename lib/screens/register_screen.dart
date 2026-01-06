@@ -16,6 +16,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _passwordConfirm = TextEditingController();
   bool loading = false;
   bool _obscure = true;
 
@@ -111,6 +112,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       obscureText: _obscure,
                       validator: (v) =>
                           (v == null || v.length < 6) ? 'Min 6 chars' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _passwordConfirm,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        labelText: 'Confirm password',
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscure ? Icons.visibility : Icons.visibility_off,
+                          ),
+                          onPressed: () => setState(() => _obscure = !_obscure),
+                        ),
+                      ),
+                      obscureText: _obscure,
+                      validator: (v) => (v == null || v != _password.text)
+                          ? 'Passwords do not match'
+                          : null,
                     ),
                     const SizedBox(height: 20),
                     loading

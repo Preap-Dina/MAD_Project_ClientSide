@@ -4,7 +4,7 @@ import 'screens/onboarding_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/explore_screen.dart';
 import 'screens/wishlist_screen.dart';
-import 'screens/account_screen.dart';
+import 'screens/account_screen_clean.dart';
 import 'utils/constants.dart';
 
 void main() {
