@@ -28,18 +28,54 @@ class FoodCard extends StatelessWidget {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: food.image != null
-                        ? Image.network(
-                            food.image!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stack) => Container(
-                              color: Colors.grey[200],
-                              child: const Center(
-                                child: Icon(Icons.broken_image),
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(8),
+                      ),
+                      child: food.image != null
+                          ? Image.network(
+                        food.image!, // Use directly - Laravel now returns full URLs
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: Colors.grey[200],
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                    : null,
                               ),
                             ),
-                          )
-                        : Container(color: Colors.grey[200]),
+                          );
+                        },
+                        errorBuilder: (context, error, stack) {
+                          debugPrint('Failed to load image: ${food.image}');
+                          debugPrint('Error: $error');
+                          return Container(
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                          : Container(
+                        color: Colors.grey[200],
+                        child: const Center(
+                          child: Icon(
+                            Icons.restaurant,
+                            size: 40,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                   Positioned(
                     right: 6,

@@ -103,9 +103,23 @@ class ApiService {
     final res = await http.get(uri, headers: _headers(token));
     if (res.statusCode == 200) {
       final body = jsonDecode(res.body);
-      final list = body['wishlist'] as List<dynamic>;
-      // wishlist items contain food field
-      return list.map((e) => Food.fromJson(e['food'] ?? e)).toList();
+
+      // Handle both old and new format for backward compatibility
+      List<dynamic> list;
+      if (body is List) {
+        // New format: direct array of foods
+        list = body;
+      } else if (body is Map && body.containsKey('wishlist')) {
+        // Old format: nested in 'wishlist' key
+        list = body['wishlist'] as List<dynamic>;
+        // Extract food from each wishlist item
+        return list.map((e) => Food.fromJson(e['food'] ?? e)).toList();
+      } else {
+        return [];
+      }
+
+      // New format: foods already have full URLs
+      return list.map((e) => Food.fromJson(e)).toList();
     }
     return [];
   }

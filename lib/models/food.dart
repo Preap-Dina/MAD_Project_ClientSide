@@ -1,3 +1,5 @@
+import '../utils/constants.dart';
+
 class Food {
   final int id;
   final String name;
